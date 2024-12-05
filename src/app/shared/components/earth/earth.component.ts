@@ -251,7 +251,10 @@ export class EarthComponent implements AfterViewInit {
         } else {
             this.hoveredOcean = null;
             this.renderer.domElement.style.cursor = 'default';
-            this.isRotating = !this.selectedOcean;
+            // Modifié ici : ne réactiver la rotation que s'il n'y a pas de sélection
+            if (!this.selectedOcean) {
+                this.isRotating = true;
+            }
         }
     }
 
@@ -357,8 +360,13 @@ export class EarthComponent implements AfterViewInit {
 
     closePanel(): void {
         this.selectedOcean = null;
-        this.startZoomAnimation(false); // Démarre l'animation de dézoom
+        this.startZoomAnimation(false);
         this.isRotating = true;
+
+        // Attendre la fin de l'animation de zoom avant de réactiver la rotation
+        setTimeout(() => {
+            this.isAnimating = false;
+        }, this.ZOOM_DURATION - 2150); // On ajoute un petit délai pour être sûr
     }
 
     ngOnDestroy(): void {
