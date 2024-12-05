@@ -19,9 +19,12 @@ export class OceanPanelComponent {
   // Function to close the panel
   onClose(): void {
     this.isClosing = true; // Start the closing animation
+    this.isActive = false
     setTimeout(() => {
       this.close.emit(); // Emit close event after the animation completes
-    }, 500); // Wait for the animation duration before emitting the event
+      this.isClosing = false
+
+    }, 600); // Wait for the animation duration before emitting the event
   }
 
   // Function to open the panel

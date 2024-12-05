@@ -9,12 +9,13 @@
       </button>
     </div>
 
-    <div class="panel-content">
-      <p class="text-blue-1000">{{ ocean.info }}</p>
-    </div>
+    <div class="scrollable-content">
+      <div class="panel-content">
+        <p class="text-blue-1000">{{ ocean.info }}</p>
+      </div>
 
-    <!-- Anecdotes Section -->
-    <div *ngIf="ocean.anecdotes && ocean.anecdotes.length > 0" class="anecdotes">
+      <!-- Anecdotes Section -->
+      <div *ngIf="ocean.anecdotes && ocean.anecdotes.length > 0" class="anecdotes">
         <h3 class="text-xl font-semibold text-gray-100 mb-4">## Anecdotes</h3>
         <ul>
           <li *ngFor="let anecdote of ocean.anecdotes" class="text-lg text-gray-300 mb-2">
@@ -23,16 +24,17 @@
             </div>
           </li>
         </ul>
-    </div>
+      </div>
 
-    <!-- QCM Section -->
-    <div *ngIf="ocean.QCM && ocean.QCM.length > 0" class="qcm-section mt-5">
-      <h3 class="text-xl font-bold text-gray-100 mb-3">## Questions à Choisir (QCM)</h3>
-      <div *ngFor="let qcm of ocean.QCM">
-        <h4 class="font-semibold">{{ qcm.title }}</h4>
-        <div *ngFor="let question of qcm.questions; let i = index" class="question-item mt-2">
-          <p>{{ question }}</p>
-          <p *ngIf="i === qcm.correctAnswerIndex" class="text-green-500">Réponse correcte</p>
+      <!-- QCM Section -->
+      <div *ngIf="ocean.QCM && ocean.QCM.length > 0" class="qcm-section mt-5">
+        <h3 class="text-xl font-bold text-gray-100 mb-3">## Questions à Choisir (QCM)</h3>
+        <div *ngFor="let qcm of ocean.QCM">
+          <h4 class="font-semibold">{{ qcm.title }}</h4>
+          <div *ngFor="let question of qcm.questions; let i = index" class="question-item mt-2">
+            <p>{{ question }}</p>
+            <p *ngIf="i === qcm.correctAnswerIndex" class="text-green-500">Réponse correcte</p>
+          </div>
         </div>
       </div>
     </div>
