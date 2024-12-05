@@ -10,20 +10,6 @@ import {Ocean, OCEANS} from "../../../core/models/oceans.model";
     selector: 'app-globe',
     standalone: true,
     imports: [CommonModule, OceanPanelComponent],
-    template: `
-        <div class="globe-container">
-            <canvas #globeCanvas></canvas>
-
-            <div *ngIf="hoveredOcean" class="ocean-name">
-                {{ hoveredOcean }}
-            </div>
-
-            <app-ocean-panel
-                [ocean]="selectedOcean"
-                (close)="closePanel()">
-            </app-ocean-panel>
-        </div>
-    `,
     styles: [`
         .globe-container {
             width: 100%;
@@ -35,18 +21,8 @@ import {Ocean, OCEANS} from "../../../core/models/oceans.model";
             width: 100%;
             height: 100%;
         }
-        .ocean-name {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            pointer-events: none;
-            z-index: 1000;
-        }
-    `]
+    `],
+    templateUrl: './earth.component.html'
 })
 export class EarthComponent implements AfterViewInit {
     @ViewChild('globeCanvas') private canvasRef!: ElementRef;
