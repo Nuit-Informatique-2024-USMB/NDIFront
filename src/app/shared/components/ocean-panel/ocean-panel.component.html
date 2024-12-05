@@ -1,1 +1,12 @@
-<p>ocean-panel works!</p>
+<div class="ocean-panel" [ngClass]="{ 'active': ocean }" *ngIf="ocean">
+    <div class="panel-header flex justify-between items-center mb-5">
+      <h2 class="text-3xl font-semibold text-gray-800">{{ ocean.name }}</h2>
+      <button (click)="onClose()" class="close-btn">
+        ×
+      </button>
+    </div>
+    <div class="panel-content">
+      <p class="text-blue-1000">{{ ocean.info }}</p>
+    </div>
+  </div>
+  
