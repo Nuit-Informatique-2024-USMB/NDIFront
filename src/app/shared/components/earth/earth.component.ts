@@ -10,20 +10,6 @@ import {Ocean, OCEANS} from "../../../core/models/oceans.model";
     selector: 'app-globe',
     standalone: true,
     imports: [CommonModule, OceanPanelComponent],
-    template: `
-        <div class="globe-container">
-            <canvas #globeCanvas></canvas>
-
-            <div *ngIf="hoveredOcean" class="ocean-name">
-                {{ hoveredOcean }}
-            </div>
-
-            <app-ocean-panel
-                [ocean]="selectedOcean"
-                (close)="closePanel()">
-            </app-ocean-panel>
-        </div>
-    `,
     styles: [`
         .globe-container {
             width: 100%;
@@ -35,18 +21,8 @@ import {Ocean, OCEANS} from "../../../core/models/oceans.model";
             width: 100%;
             height: 100%;
         }
-        .ocean-name {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            pointer-events: none;
-            z-index: 1000;
-        }
-    `]
+    `],
+    templateUrl: './earth.component.html'
 })
 export class EarthComponent implements AfterViewInit {
     @ViewChild('globeCanvas') private canvasRef!: ElementRef;
@@ -60,11 +36,21 @@ export class EarthComponent implements AfterViewInit {
     private mouse = new THREE.Vector2();
     private oceanPoints: THREE.Mesh[] = [];
 
+    private isRotating: boolean = true;
+    private autoRotationSpeed: number = 0.001;
+
     hoveredOcean: string | null = null;
     selectedOcean: Ocean | null = null;
 
     private readonly EARTH_RADIUS = 5;
-    private readonly CAMERA_DISTANCE = 15;
+    private readonly CAMERA_DISTANCE = 12;
+
+    private defaultCameraPosition = new THREE.Vector3(0, 0, this.CAMERA_DISTANCE);
+    private targetCameraPosition = new THREE.Vector3();
+    private isAnimating = false;
+    private readonly ZOOM_DURATION = 1000; // durée en millisecondes
+    private readonly ZOOM_FACTOR = 0.7; // facteur de zoom (plus petit = plus zoomé)
+    private animationStartTime = 0;
 
     constructor() {
         this.setupEventListeners();
@@ -94,16 +80,25 @@ export class EarthComponent implements AfterViewInit {
             antialias: true
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        const gradientTexture = this.createRadialGradientTexture('#87CEEB', '#238b9c');
 
+        this.scene.background = gradientTexture;
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
         this.controls.rotateSpeed = 0.5;
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.rotateSpeed = 0.5;
+        this.controls.minDistance = this.CAMERA_DISTANCE * this.ZOOM_FACTOR; // Distance minimum de zoom
+        this.controls.maxDistance = this.CAMERA_DISTANCE * 1.2; // Distance maximum de zoom
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 3);
         this.scene.add(ambientLight);
 
-        const pointLight = new THREE.PointLight(0xffffff, 1);
+        const pointLight = new THREE.PointLight(0xffffff, 6);
         pointLight.position.set(10, 10, 10);
         this.scene.add(pointLight);
 
@@ -122,6 +117,21 @@ export class EarthComponent implements AfterViewInit {
 
         this.globe = new THREE.Mesh(geometry, material);
         this.scene.add(this.globe);
+
+        const cloudGeometry = new THREE.SphereGeometry(this.EARTH_RADIUS + 0.1, 32, 32);
+        const cloudTexture = textureLoader.load('assets/earth-clouds.png');
+        const cloudMaterial = new THREE.MeshPhongMaterial({
+            map: cloudTexture,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
+        cloudMesh.name = 'cloudMesh';
+        this.scene.add(cloudMesh);
+
+        cloudMesh.rotation.y = Math.random() * Math.PI * 2;
+
     }
 
     private latLongToVector3(latitude: number, longitude: number): THREE.Vector3 {
@@ -135,26 +145,51 @@ export class EarthComponent implements AfterViewInit {
         return new THREE.Vector3(x, y, z);
     }
 
+    // Modifiez la méthode createOceanPoints pour ajouter le cursor pointer
     private createOceanPoints(): void {
         const geometry = new THREE.SphereGeometry(0.1, 16, 16);
-        const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffff00,
+            transparent: true,
+            opacity: 0.8
+        });
 
-        OCEANS.forEach((ocean: any) => {
+        OCEANS.forEach(ocean => {
             const position = this.latLongToVector3(
                 ocean.position.latitude,
                 ocean.position.longitude
             );
-            const point = new THREE.Mesh(geometry, material);
+            const point = new THREE.Mesh(geometry, material.clone());
             point.position.copy(position);
             point.userData = ocean;
+            // Ajout du style cursor pointer
             this.oceanPoints.push(point);
-            this.scene.add(point);
+            this.globe.add(point);
         });
+
+        // Ajoutez ces styles au composant
+        document.body.style.cursor = 'default';
+        this.renderer.domElement.style.cursor = 'default';
     }
 
+
     private animate(): void {
+        const cloudMesh = this.scene.getObjectByName('cloudMesh');
+
         requestAnimationFrame(() => this.animate());
-        this.globe.rotation.y += 0.001;
+
+        if (this.isRotating && !this.isAnimating) {
+            this.globe.rotation.y += this.autoRotationSpeed;
+        }
+
+        if (this.isAnimating) {
+            this.updateCameraPosition();
+        }
+
+        if (cloudMesh) {
+            cloudMesh.rotation.y += -0.0005;
+        }
+
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
@@ -166,11 +201,23 @@ export class EarthComponent implements AfterViewInit {
         this.raycaster.setFromCamera(this.mouse, this.camera);
         const intersects = this.raycaster.intersectObjects(this.oceanPoints);
 
+        // Réinitialiser tous les points à leur taille normale
+        this.oceanPoints.forEach(point => {
+            point.scale.set(1, 1, 1);
+        });
+
         if (intersects.length > 0) {
-            const ocean = intersects[0].object.userData as Ocean;
+            const intersectedPoint = intersects[0].object as THREE.Mesh;
+            const ocean = intersectedPoint.userData as Ocean;
             this.hoveredOcean = ocean.name;
+            intersectedPoint.scale.set(1.5, 1.5, 1.5);
+            this.isRotating = false;  // Arrêter la rotation
+            this.renderer.domElement.style.cursor = 'pointer'; // Changer le cursor
         } else {
             this.hoveredOcean = null;
+            this.renderer.domElement.style.cursor = 'default';
+            // Reprendre la rotation seulement si aucun panel n'est ouvert
+            this.isRotating = !this.selectedOcean;
         }
     }
 
@@ -181,6 +228,29 @@ export class EarthComponent implements AfterViewInit {
         if (intersects.length > 0) {
             const ocean = intersects[0].object.userData as Ocean;
             this.selectedOcean = ocean;
+            this.isRotating = false;
+
+            // Calculer la position cible pour le point
+            const point = intersects[0].object;
+            const pointWorldPosition = new THREE.Vector3();
+            point.getWorldPosition(pointWorldPosition);
+
+            // Normaliser la position et ajuster pour le zoom
+            const direction = pointWorldPosition.clone().normalize();
+            this.targetCameraPosition.copy(direction.multiplyScalar(this.CAMERA_DISTANCE * this.ZOOM_FACTOR));
+
+            // Démarrer l'animation
+            this.startZoomAnimation(true);
+        }
+    }
+
+    private startZoomAnimation(zoomIn: boolean): void {
+        this.isAnimating = true;
+        this.animationStartTime = Date.now();
+
+        if (!zoomIn) {
+            // Pour le dézoom, on retourne à la position initiale
+            this.targetCameraPosition.copy(this.defaultCameraPosition);
         }
     }
 
@@ -193,8 +263,65 @@ export class EarthComponent implements AfterViewInit {
         this.renderer.setSize(width, height);
     }
 
+    private updateCameraPosition(): void {
+        if (!this.isAnimating) return;
+
+        const currentTime = Date.now();
+        const elapsed = currentTime - this.animationStartTime;
+        const progress = Math.min(elapsed / this.ZOOM_DURATION, 1);
+
+        // Fonction d'easing pour une animation plus fluide
+        const easeProgress = this.easeInOutCubic(progress);
+
+        // Interpoler la position de la caméra
+        const newPosition = new THREE.Vector3();
+        newPosition.lerpVectors(
+            this.camera.position,
+            this.targetCameraPosition,
+            easeProgress
+        );
+
+        this.camera.position.copy(newPosition);
+        this.camera.lookAt(0, 0, 0);
+
+        if (progress === 1) {
+            this.isAnimating = false;
+        }
+    }
+
+    private easeInOutCubic(t: number): number {
+        return t < 0.5
+            ? 4 * t * t * t
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    private createRadialGradientTexture(centerColor: string, edgeColor: string): THREE.Texture {
+        const size = 512; // Taille du canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Impossible de créer un contexte 2D');
+
+        // Dégradé radial
+        const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+        gradient.addColorStop(0, centerColor);
+        gradient.addColorStop(1, edgeColor);
+
+        // Remplissage du canvas avec le dégradé
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+
+        // Convertir le canvas en texture
+        const texture = new THREE.CanvasTexture(canvas);
+        return texture;
+    }
+
     closePanel(): void {
         this.selectedOcean = null;
+        this.startZoomAnimation(false); // Démarre l'animation de dézoom
+        this.isRotating = true;
     }
 
     ngOnDestroy(): void {
@@ -202,4 +329,6 @@ export class EarthComponent implements AfterViewInit {
         document.removeEventListener('mousemove', (event) => this.onMouseMove(event));
         document.removeEventListener('click', (event) => this.onClick(event));
     }
+
+
 }
