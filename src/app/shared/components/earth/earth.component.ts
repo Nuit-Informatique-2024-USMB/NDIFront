@@ -34,7 +34,9 @@ export class EarthComponent implements AfterViewInit {
     private controls!: OrbitControls;
     private raycaster = new THREE.Raycaster();
     private mouse = new THREE.Vector2();
-    private oceanPoints: THREE.Mesh[] = [];
+    private oceanPoints: THREE.Group[] = [];
+
+    private pointScales: Map<THREE.Group, {current: number, target: number}> = new Map();
 
     private isRotating: boolean = true;
     private autoRotationSpeed: number = 0.001;
@@ -43,12 +45,12 @@ export class EarthComponent implements AfterViewInit {
     selectedOcean: Ocean | null = null;
 
     private readonly EARTH_RADIUS = 5;
-    private readonly CAMERA_DISTANCE = 12;
+    private readonly CAMERA_DISTANCE = 9;
 
     private defaultCameraPosition = new THREE.Vector3(0, 0, this.CAMERA_DISTANCE);
     private targetCameraPosition = new THREE.Vector3();
     private isAnimating = false;
-    private readonly ZOOM_DURATION = 1000; // durée en millisecondes
+    private readonly ZOOM_DURATION = 3000; // durée en millisecondes
     private readonly ZOOM_FACTOR = 0.7; // facteur de zoom (plus petit = plus zoomé)
     private animationStartTime = 0;
 
@@ -106,19 +108,30 @@ export class EarthComponent implements AfterViewInit {
     }
 
     private createGlobe(): void {
-        const geometry = new THREE.SphereGeometry(this.EARTH_RADIUS, 32, 32);
+        const geometry = new THREE.SphereGeometry(this.EARTH_RADIUS, 64, 64); // Plus de segments pour des détails précis
         const textureLoader = new THREE.TextureLoader();
-        const earthTexture = textureLoader.load('assets/earth-texture.jpg');
 
+        // Charger les textures
+        const earthTexture = textureLoader.load('assets/earth-texture.jpg');
+        const normalMap = textureLoader.load('assets/earth-normal-map.jpg'); // Mappe de normales
+        const displacementMap = textureLoader.load('assets/earth-displacement.jpeg'); // Mappe de hauteur
+
+
+
+        // Matériau du globe
         const material = new THREE.MeshPhongMaterial({
             map: earthTexture,
-            bumpScale: 0.1
+            normalMap: normalMap, // Ajouter une mappe de normales pour les détails des reliefs
+            displacementMap: displacementMap, // Mappe pour les reliefs
+            displacementScale: 0.3,
+            normalScale: new THREE.Vector2(0.8, 0.8)
         });
+
 
         this.globe = new THREE.Mesh(geometry, material);
         this.scene.add(this.globe);
 
-        const cloudGeometry = new THREE.SphereGeometry(this.EARTH_RADIUS + 0.1, 32, 32);
+        const cloudGeometry = new THREE.SphereGeometry(this.EARTH_RADIUS + 0.15, 64, 64);
         const cloudTexture = textureLoader.load('assets/earth-clouds.png');
         const cloudMaterial = new THREE.MeshPhongMaterial({
             map: cloudTexture,
@@ -131,8 +144,8 @@ export class EarthComponent implements AfterViewInit {
         this.scene.add(cloudMesh);
 
         cloudMesh.rotation.y = Math.random() * Math.PI * 2;
-
     }
+
 
     private latLongToVector3(latitude: number, longitude: number): THREE.Vector3 {
         const phi = (90 - latitude) * (Math.PI / 180);
@@ -147,47 +160,75 @@ export class EarthComponent implements AfterViewInit {
 
     // Modifiez la méthode createOceanPoints pour ajouter le cursor pointer
     private createOceanPoints(): void {
-        const geometry = new THREE.SphereGeometry(0.1, 16, 16);
-        const material = new THREE.MeshBasicMaterial({
-            color: 0xffff00,
+        const mainGeometry = new THREE.CircleGeometry(0.13, 16);
+        const mainMaterial = new THREE.MeshBasicMaterial({
+            color: 0x000000,
             transparent: true,
-            opacity: 0.8
+            opacity: 1,
+            depthTest: true,
+            side: THREE.DoubleSide
+        });
+
+        const borderGeometry = new THREE.RingGeometry(0.13, 0.16, 32);
+        const borderMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            depthTest: true,
+            side: THREE.DoubleSide
+        });
+
+        const centerGeometry = new THREE.CircleGeometry(0.04, 32);
+        const centerMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            depthTest: true,
+            side: THREE.DoubleSide
         });
 
         OCEANS.forEach(ocean => {
+            const point = new THREE.Group();
+
+            const mainPoint = new THREE.Mesh(mainGeometry, mainMaterial.clone());
+            const border = new THREE.Mesh(borderGeometry, borderMaterial.clone());
+            const centerPoint = new THREE.Mesh(centerGeometry, centerMaterial.clone());
+
+            point.add(mainPoint);
+            point.add(border);
+            point.add(centerPoint);
+
+            // Position
             const position = this.latLongToVector3(
                 ocean.position.latitude,
                 ocean.position.longitude
             );
-            const point = new THREE.Mesh(geometry, material.clone());
-            point.position.copy(position);
+
+            point.position.copy(position.normalize().multiplyScalar(this.EARTH_RADIUS + 0.3));
             point.userData = ocean;
-            // Ajout du style cursor pointer
+
             this.oceanPoints.push(point);
             this.globe.add(point);
         });
-
-        // Ajoutez ces styles au composant
-        document.body.style.cursor = 'default';
-        this.renderer.domElement.style.cursor = 'default';
     }
 
 
     private animate(): void {
-        const cloudMesh = this.scene.getObjectByName('cloudMesh');
-
         requestAnimationFrame(() => this.animate());
 
+        // Faire face à la caméra pour chaque point
+        this.oceanPoints.forEach(point => {
+            point.lookAt(this.camera.position);
+            point.rotateY(Math.PI); // Pour s'assurer que les points sont bien orientés
+        });
+
+        // Le reste de votre code d'animation...
         if (this.isRotating && !this.isAnimating) {
             this.globe.rotation.y += this.autoRotationSpeed;
         }
 
         if (this.isAnimating) {
             this.updateCameraPosition();
-        }
-
-        if (cloudMesh) {
-            cloudMesh.rotation.y += -0.0005;
         }
 
         this.controls.update();
@@ -199,48 +240,58 @@ export class EarthComponent implements AfterViewInit {
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.oceanPoints);
+        const allMeshes = this.oceanPoints.flatMap(group => group.children);
+        const intersects = this.raycaster.intersectObjects(allMeshes);
 
-        // Réinitialiser tous les points à leur taille normale
-        this.oceanPoints.forEach(point => {
-            point.scale.set(1, 1, 1);
+        // Réinitialiser les échelles cibles
+        this.oceanPoints.forEach(group => {
+            const scale = this.pointScales.get(group);
+            if (scale) scale.target = 1;
         });
 
         if (intersects.length > 0) {
-            const intersectedPoint = intersects[0].object as THREE.Mesh;
-            const ocean = intersectedPoint.userData as Ocean;
-            this.hoveredOcean = ocean.name;
-            intersectedPoint.scale.set(1.5, 1.5, 1.5);
-            this.isRotating = false;  // Arrêter la rotation
-            this.renderer.domElement.style.cursor = 'pointer'; // Changer le cursor
+            const group: any = intersects[0].object.parent;
+            if (group) {
+                const ocean = group.userData as Ocean;
+                this.hoveredOcean = ocean.name;
+                const scale = this.pointScales.get(group);
+                if (scale) scale.target = 1.5;
+                this.isRotating = false;
+                this.renderer.domElement.style.cursor = 'pointer';
+            }
         } else {
             this.hoveredOcean = null;
             this.renderer.domElement.style.cursor = 'default';
-            // Reprendre la rotation seulement si aucun panel n'est ouvert
-            this.isRotating = !this.selectedOcean;
+            // Modifié ici : ne réactiver la rotation que s'il n'y a pas de sélection
+            if (!this.selectedOcean) {
+                this.isRotating = true;
+            }
         }
     }
 
     private onClick(event: MouseEvent): void {
         this.raycaster.setFromCamera(this.mouse, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.oceanPoints);
+        const allMeshes = this.oceanPoints.flatMap(group => group.children);
+        const intersects = this.raycaster.intersectObjects(allMeshes);
 
         if (intersects.length > 0) {
-            const ocean = intersects[0].object.userData as Ocean;
-            this.selectedOcean = ocean;
-            this.isRotating = false;
+            const group = intersects[0].object.parent;
+            if (group) {
+                const ocean = group.userData as Ocean;
+                this.selectedOcean = ocean;
+                this.isRotating = false;
 
-            // Calculer la position cible pour le point
-            const point = intersects[0].object;
-            const pointWorldPosition = new THREE.Vector3();
-            point.getWorldPosition(pointWorldPosition);
+                // Calculer la position cible pour le point
+                const pointWorldPosition = new THREE.Vector3();
+                group.getWorldPosition(pointWorldPosition);
 
-            // Normaliser la position et ajuster pour le zoom
-            const direction = pointWorldPosition.clone().normalize();
-            this.targetCameraPosition.copy(direction.multiplyScalar(this.CAMERA_DISTANCE * this.ZOOM_FACTOR));
+                // Normaliser la position et ajuster pour le zoom
+                const direction = pointWorldPosition.clone().normalize();
+                this.targetCameraPosition.copy(direction.multiplyScalar(this.CAMERA_DISTANCE * this.ZOOM_FACTOR));
 
-            // Démarrer l'animation
-            this.startZoomAnimation(true);
+                // Démarrer l'animation
+                this.startZoomAnimation(true);
+            }
         }
     }
 
@@ -320,8 +371,13 @@ export class EarthComponent implements AfterViewInit {
 
     closePanel(): void {
         this.selectedOcean = null;
-        this.startZoomAnimation(false); // Démarre l'animation de dézoom
+        this.startZoomAnimation(false);
         this.isRotating = true;
+
+        // Attendre la fin de l'animation de zoom avant de réactiver la rotation
+        setTimeout(() => {
+            this.isAnimating = false;
+        }, this.ZOOM_DURATION - 2150); // On ajoute un petit délai pour être sûr
     }
 
     ngOnDestroy(): void {
