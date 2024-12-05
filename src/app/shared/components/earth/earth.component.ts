@@ -104,6 +104,7 @@ export class EarthComponent implements AfterViewInit {
             antialias: true
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setClearColor(0x87CEEB);
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
@@ -117,10 +118,10 @@ export class EarthComponent implements AfterViewInit {
         this.controls.minDistance = this.CAMERA_DISTANCE * this.ZOOM_FACTOR; // Distance minimum de zoom
         this.controls.maxDistance = this.CAMERA_DISTANCE * 1.2; // Distance maximum de zoom
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 2);
         this.scene.add(ambientLight);
 
-        const pointLight = new THREE.PointLight(0xffffff, 1);
+        const pointLight = new THREE.PointLight(0xffffff, 2);
         pointLight.position.set(10, 10, 10);
         this.scene.add(pointLight);
 
