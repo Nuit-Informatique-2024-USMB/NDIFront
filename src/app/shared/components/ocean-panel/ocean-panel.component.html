@@ -1,5 +1,5 @@
 <div class="ocean-panel" 
-     [ngClass]="{ 'active': ocean }" 
+     [ngClass]="{ 'active': ocean, 'closing': isClosing }" 
      *ngIf="ocean"
      [@panelAnimation]="isActive ? 'active' : 'inactive'">
     <div class="panel-header flex justify-between items-center mb-5">
@@ -23,7 +23,7 @@
             </div>
           </li>
         </ul>
-      </div>
+    </div>
 
     <!-- QCM Section -->
     <div *ngIf="ocean.QCM && ocean.QCM.length > 0" class="qcm-section mt-5">
