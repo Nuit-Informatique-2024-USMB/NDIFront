@@ -51,7 +51,7 @@ export class EarthComponent implements AfterViewInit {
     private targetCameraPosition = new THREE.Vector3();
     private isAnimating = false;
     private readonly ZOOM_DURATION = 3000; // durée en millisecondes
-    private readonly ZOOM_FACTOR = 0.7; // facteur de zoom (plus petit = plus zoomé)
+    private readonly ZOOM_FACTOR = 0.9; // facteur de zoom (plus petit = plus zoomé)
     private animationStartTime = 0;
 
     constructor() {
