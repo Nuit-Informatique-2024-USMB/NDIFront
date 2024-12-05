@@ -1,12 +1,39 @@
-<div class="ocean-panel" [ngClass]="{ 'active': ocean }" *ngIf="ocean">
+<div class="ocean-panel" 
+     [ngClass]="{ 'active': ocean }" 
+     *ngIf="ocean"
+     [@panelAnimation]="isActive ? 'active' : 'inactive'">
     <div class="panel-header flex justify-between items-center mb-5">
       <h2 class="text-3xl font-semibold text-gray-800">{{ ocean.name }}</h2>
       <button (click)="onClose()" class="close-btn">
         ×
       </button>
     </div>
+
     <div class="panel-content">
       <p class="text-blue-1000">{{ ocean.info }}</p>
     </div>
-  </div>
-  
+
+    <!-- Anecdotes Section -->
+    <div *ngIf="ocean.anecdotes && ocean.anecdotes.length > 0" class="anecdotes">
+        <h3 class="text-xl font-semibold text-gray-100 mb-4">## Anecdotes</h3>
+        <ul>
+          <li *ngFor="let anecdote of ocean.anecdotes" class="text-lg text-gray-300 mb-2">
+            <div class="bg-white text-gray-800 p-4 rounded-lg shadow-md">
+              {{ anecdote }}
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    <!-- QCM Section -->
+    <div *ngIf="ocean.QCM && ocean.QCM.length > 0" class="qcm-section mt-5">
+      <h3 class="text-xl font-bold text-gray-100 mb-3">## Questions à Choisir (QCM)</h3>
+      <div *ngFor="let qcm of ocean.QCM">
+        <h4 class="font-semibold">{{ qcm.title }}</h4>
+        <div *ngFor="let question of qcm.questions; let i = index" class="question-item mt-2">
+          <p>{{ question }}</p>
+          <p *ngIf="i === qcm.correctAnswerIndex" class="text-green-500">Réponse correcte</p>
+        </div>
+      </div>
+    </div>
+</div>
