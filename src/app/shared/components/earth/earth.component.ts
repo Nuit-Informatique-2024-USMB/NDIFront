@@ -60,11 +60,21 @@ export class EarthComponent implements AfterViewInit {
     private mouse = new THREE.Vector2();
     private oceanPoints: THREE.Mesh[] = [];
 
+    private isRotating: boolean = true;
+    private autoRotationSpeed: number = 0.001;
+
     hoveredOcean: string | null = null;
     selectedOcean: Ocean | null = null;
 
     private readonly EARTH_RADIUS = 5;
     private readonly CAMERA_DISTANCE = 15;
+
+    private defaultCameraPosition = new THREE.Vector3(0, 0, this.CAMERA_DISTANCE);
+    private targetCameraPosition = new THREE.Vector3();
+    private isAnimating = false;
+    private readonly ZOOM_DURATION = 1000; // durée en millisecondes
+    private readonly ZOOM_FACTOR = 0.7; // facteur de zoom (plus petit = plus zoomé)
+    private animationStartTime = 0;
 
     constructor() {
         this.setupEventListeners();
@@ -99,6 +109,13 @@ export class EarthComponent implements AfterViewInit {
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
         this.controls.rotateSpeed = 0.5;
+
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.rotateSpeed = 0.5;
+        this.controls.minDistance = this.CAMERA_DISTANCE * this.ZOOM_FACTOR; // Distance minimum de zoom
+        this.controls.maxDistance = this.CAMERA_DISTANCE * 1.2; // Distance maximum de zoom
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);
@@ -135,26 +152,45 @@ export class EarthComponent implements AfterViewInit {
         return new THREE.Vector3(x, y, z);
     }
 
+    // Modifiez la méthode createOceanPoints pour ajouter le cursor pointer
     private createOceanPoints(): void {
         const geometry = new THREE.SphereGeometry(0.1, 16, 16);
-        const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffff00,
+            transparent: true,
+            opacity: 0.8
+        });
 
-        OCEANS.forEach((ocean: any) => {
+        OCEANS.forEach(ocean => {
             const position = this.latLongToVector3(
                 ocean.position.latitude,
                 ocean.position.longitude
             );
-            const point = new THREE.Mesh(geometry, material);
+            const point = new THREE.Mesh(geometry, material.clone());
             point.position.copy(position);
             point.userData = ocean;
+            // Ajout du style cursor pointer
             this.oceanPoints.push(point);
-            this.scene.add(point);
+            this.globe.add(point);
         });
+
+        // Ajoutez ces styles au composant
+        document.body.style.cursor = 'default';
+        this.renderer.domElement.style.cursor = 'default';
     }
+
 
     private animate(): void {
         requestAnimationFrame(() => this.animate());
-        this.globe.rotation.y += 0.001;
+
+        if (this.isRotating && !this.isAnimating) {
+            this.globe.rotation.y += this.autoRotationSpeed;
+        }
+
+        if (this.isAnimating) {
+            this.updateCameraPosition();
+        }
+
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
@@ -166,11 +202,23 @@ export class EarthComponent implements AfterViewInit {
         this.raycaster.setFromCamera(this.mouse, this.camera);
         const intersects = this.raycaster.intersectObjects(this.oceanPoints);
 
+        // Réinitialiser tous les points à leur taille normale
+        this.oceanPoints.forEach(point => {
+            point.scale.set(1, 1, 1);
+        });
+
         if (intersects.length > 0) {
-            const ocean = intersects[0].object.userData as Ocean;
+            const intersectedPoint = intersects[0].object as THREE.Mesh;
+            const ocean = intersectedPoint.userData as Ocean;
             this.hoveredOcean = ocean.name;
+            intersectedPoint.scale.set(1.5, 1.5, 1.5);
+            this.isRotating = false;  // Arrêter la rotation
+            this.renderer.domElement.style.cursor = 'pointer'; // Changer le cursor
         } else {
             this.hoveredOcean = null;
+            this.renderer.domElement.style.cursor = 'default';
+            // Reprendre la rotation seulement si aucun panel n'est ouvert
+            this.isRotating = !this.selectedOcean;
         }
     }
 
@@ -181,6 +229,29 @@ export class EarthComponent implements AfterViewInit {
         if (intersects.length > 0) {
             const ocean = intersects[0].object.userData as Ocean;
             this.selectedOcean = ocean;
+            this.isRotating = false;
+
+            // Calculer la position cible pour le point
+            const point = intersects[0].object;
+            const pointWorldPosition = new THREE.Vector3();
+            point.getWorldPosition(pointWorldPosition);
+
+            // Normaliser la position et ajuster pour le zoom
+            const direction = pointWorldPosition.clone().normalize();
+            this.targetCameraPosition.copy(direction.multiplyScalar(this.CAMERA_DISTANCE * this.ZOOM_FACTOR));
+
+            // Démarrer l'animation
+            this.startZoomAnimation(true);
+        }
+    }
+
+    private startZoomAnimation(zoomIn: boolean): void {
+        this.isAnimating = true;
+        this.animationStartTime = Date.now();
+
+        if (!zoomIn) {
+            // Pour le dézoom, on retourne à la position initiale
+            this.targetCameraPosition.copy(this.defaultCameraPosition);
         }
     }
 
@@ -193,8 +264,42 @@ export class EarthComponent implements AfterViewInit {
         this.renderer.setSize(width, height);
     }
 
+    private updateCameraPosition(): void {
+        if (!this.isAnimating) return;
+
+        const currentTime = Date.now();
+        const elapsed = currentTime - this.animationStartTime;
+        const progress = Math.min(elapsed / this.ZOOM_DURATION, 1);
+
+        // Fonction d'easing pour une animation plus fluide
+        const easeProgress = this.easeInOutCubic(progress);
+
+        // Interpoler la position de la caméra
+        const newPosition = new THREE.Vector3();
+        newPosition.lerpVectors(
+            this.camera.position,
+            this.targetCameraPosition,
+            easeProgress
+        );
+
+        this.camera.position.copy(newPosition);
+        this.camera.lookAt(0, 0, 0);
+
+        if (progress === 1) {
+            this.isAnimating = false;
+        }
+    }
+
+    private easeInOutCubic(t: number): number {
+        return t < 0.5
+            ? 4 * t * t * t
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
     closePanel(): void {
         this.selectedOcean = null;
+        this.startZoomAnimation(false); // Démarre l'animation de dézoom
+        this.isRotating = true;
     }
 
     ngOnDestroy(): void {
