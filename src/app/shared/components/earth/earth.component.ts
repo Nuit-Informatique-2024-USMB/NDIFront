@@ -45,7 +45,7 @@ export class EarthComponent implements AfterViewInit {
     selectedOcean: Ocean | null = null;
 
     private readonly EARTH_RADIUS = 5;
-    private readonly CAMERA_DISTANCE = 12;
+    private readonly CAMERA_DISTANCE = 9;
 
     private defaultCameraPosition = new THREE.Vector3(0, 0, this.CAMERA_DISTANCE);
     private targetCameraPosition = new THREE.Vector3();
@@ -108,19 +108,30 @@ export class EarthComponent implements AfterViewInit {
     }
 
     private createGlobe(): void {
-        const geometry = new THREE.SphereGeometry(this.EARTH_RADIUS, 32, 32);
+        const geometry = new THREE.SphereGeometry(this.EARTH_RADIUS, 64, 64); // Plus de segments pour des détails précis
         const textureLoader = new THREE.TextureLoader();
-        const earthTexture = textureLoader.load('assets/earth-texture.jpg');
 
+        // Charger les textures
+        const earthTexture = textureLoader.load('assets/earth-texture.jpg');
+        const normalMap = textureLoader.load('assets/earth-normal-map.jpg'); // Mappe de normales
+        const displacementMap = textureLoader.load('assets/earth-displacement.jpeg'); // Mappe de hauteur
+
+
+
+        // Matériau du globe
         const material = new THREE.MeshPhongMaterial({
             map: earthTexture,
-            bumpScale: 0.1
+            normalMap: normalMap, // Ajouter une mappe de normales pour les détails des reliefs
+            displacementMap: displacementMap, // Mappe pour les reliefs
+            displacementScale: 0.3,
+            normalScale: new THREE.Vector2(0.8, 0.8)
         });
+
 
         this.globe = new THREE.Mesh(geometry, material);
         this.scene.add(this.globe);
 
-        const cloudGeometry = new THREE.SphereGeometry(this.EARTH_RADIUS + 0.1, 32, 32);
+        const cloudGeometry = new THREE.SphereGeometry(this.EARTH_RADIUS + 0.15, 64, 64);
         const cloudTexture = textureLoader.load('assets/earth-clouds.png');
         const cloudMaterial = new THREE.MeshPhongMaterial({
             map: cloudTexture,
@@ -133,8 +144,8 @@ export class EarthComponent implements AfterViewInit {
         this.scene.add(cloudMesh);
 
         cloudMesh.rotation.y = Math.random() * Math.PI * 2;
-
     }
+
 
     private latLongToVector3(latitude: number, longitude: number): THREE.Vector3 {
         const phi = (90 - latitude) * (Math.PI / 180);
