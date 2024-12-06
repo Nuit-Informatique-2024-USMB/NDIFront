@@ -1,36 +1,49 @@
 <div *ngIf="qcm && qcm.questions && qcm.questions.length > 0" class="p-6 bg-blue-800 rounded-lg shadow-xl">
-    <h3 class="text-xl font-bold text-purple-300 mb-3">
-      <i class="fas fa-question-circle text-purple-400 mr-2"></i> {{ qcm.title }}
-    </h3>
-  
-    <div class="question-item mt-4">
-      <div class="border-b border-white/20 pb-2 mb-4">
-        <p class="text-white text-lg">{{ qcm.questions[currentQuestionIndex].question }}</p>
-        <ul class="list-disc pl-5 space-y-2">
-          <li *ngFor="let answer of qcm.questions[currentQuestionIndex].answers; let j = index"
-              [class.text-green-400]="isAnswered && j === currentAnswerIndex && isCorrect(j)"
-              [class.text-red-400]="isAnswered && j !== currentAnswerIndex && isCorrect(j)"
-              (click)="selectAnswer(j)"
-              class="cursor-pointer hover:bg-blue-700 transition duration-200 px-3 py-2 rounded-md">
-            <i *ngIf="isAnswered && j === currentAnswerIndex"
-               class="fas" [ngClass]="{'fa-check-circle': isCorrect(j), 'fa-times-circle': !isCorrect(j)}"></i>
-            {{ answer }}
-          </li>
-        </ul>
+  <h3 class="text-xl font-bold text-purple-300 mb-3">
+    <i class="fas fa-question-circle text-purple-400 mr-2"></i> {{ qcm.title }}
+  </h3>
+
+  <div class="question-item mt-4">
+    <div class="border-b border-white/20 pb-2 mb-4">
+      <p class="text-white text-lg">{{ qcm.questions[currentQuestionIndex].question }}</p>
+      <ul class="list-disc pl-5 space-y-2">
+        <li *ngFor="let answer of qcm.questions[currentQuestionIndex].answers; let j = index"
+            [class.text-green-400]="isAnswered && j === currentAnswerIndex && isCorrect(j)"
+            [class.text-red-400]="isAnswered && j === currentAnswerIndex && !isCorrect(j)"
+            (click)="selectAnswer(j)"
+            class="cursor-pointer hover:bg-blue-700 transition duration-200 px-3 py-2 rounded-md">
+          <i *ngIf="isAnswered && j === currentAnswerIndex"
+             class="fas" [ngClass]="{'fa-check-circle': isCorrect(j), 'fa-times-circle': !isCorrect(j)}"></i>
+          {{ answer }}
+        </li>
+      </ul>
+      
+      <!-- Afficher la bonne réponse si la réponse est incorrecte -->
+      <div *ngIf="isAnswered">
+        <p class="mt-4 text-white">
+          <strong *ngIf="isCorrect(currentAnswerIndex)">Bonne réponse !</strong>
+          <strong *ngIf="!isCorrect(currentAnswerIndex)">Mauvaise réponse !</strong>
+        </p>
+        <p *ngIf="!isCorrect(currentAnswerIndex)" class="text-white mt-2">
+          La bonne réponse était : <span class="text-green-400">{{ getCorrectAnswer() }}</span>
+        </p>
       </div>
     </div>
-  
-    <!-- Navigation -->
-    <div class="mt-4 flex justify-between">
-      <button *ngIf="currentQuestionIndex > 0" (click)="previousQuestion()" class="btn btn-secondary">
-        Précédent
-      </button>
-      <button *ngIf="!isAnswered" (click)="nextQuestion()" class="btn btn-primary" [disabled]="currentAnswerIndex === -1">
-        Suivant
-      </button>
-      <button *ngIf="isAnswered" (click)="nextQuestion()" class="btn btn-primary">
-        Suivant
-      </button>
-    </div>
   </div>
-  
+
+  <!-- Afficher le compteur de question -->
+  <div class="mt-4 text-white text-sm">
+    Question {{ currentQuestionIndex + 1 }} sur {{ qcm.questions.length }}
+  </div>
+
+  <!-- Navigation -->
+  <div class="mt-4 flex justify-between">
+    <button *ngIf="currentQuestionIndex > 0" (click)="previousQuestion()" class="btn btn-secondary">
+      Précédent
+    </button>
+    <!-- Le bouton "Suivant" n'est affiché que si ce n'est pas la dernière question -->
+    <button *ngIf="isAnswered && currentQuestionIndex < qcm.questions.length - 1" (click)="nextQuestion()" class="btn btn-primary ml-auto">
+      Suivant
+    </button>
+  </div>
+</div>

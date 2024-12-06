@@ -1,16 +1,12 @@
 import { Component, Input, OnInit } from '@angular/core';
-import {NgClass, NgForOf, NgIf} from "@angular/common";
+import { NgClass, NgForOf, NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-qcm',
-    templateUrl: './qcm.component.html',
-    standalone: true,
-    imports: [
-        NgClass,
-        NgIf,
-        NgForOf
-    ],
-    styleUrls: ['./qcm.component.scss']
+  selector: 'app-qcm',
+  templateUrl: './qcm.component.html',
+  standalone: true,
+  imports: [NgClass, NgIf, NgForOf],
+  styleUrls: ['./qcm.component.scss'],
 })
 export class QcmComponent implements OnInit {
   @Input() qcm: any; // L'objet QCM passé en entrée
@@ -27,6 +23,7 @@ export class QcmComponent implements OnInit {
   selectAnswer(answerIndex: number) {
     if (!this.isAnswered) {
       this.currentAnswerIndex = answerIndex;
+      this.isAnswered = true;
     }
   }
 
@@ -34,21 +31,21 @@ export class QcmComponent implements OnInit {
     return this.qcm.questions[this.currentQuestionIndex].correctAnswerIndex === answerIndex;
   }
 
+  getCorrectAnswer() {
+    return this.qcm.questions[this.currentQuestionIndex].answers[this.qcm.questions[this.currentQuestionIndex].correctAnswerIndex];
+  }
+
   nextQuestion() {
-    if (this.isAnswered) {
-      this.currentQuestionIndex++;
-      this.isAnswered = false;
-      this.currentAnswerIndex = -1;
-    } else {
-      this.isAnswered = true;
-    }
+    this.isAnswered = false;
+    this.currentAnswerIndex = -1;
+    this.currentQuestionIndex++;
   }
 
   previousQuestion() {
     if (this.currentQuestionIndex > 0) {
-      this.currentQuestionIndex--;
       this.isAnswered = false;
       this.currentAnswerIndex = -1;
+      this.currentQuestionIndex--;
     }
   }
 }
