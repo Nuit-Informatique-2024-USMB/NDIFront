@@ -176,7 +176,7 @@ export class EarthComponent implements AfterViewInit {
           color: 0x000000,
           transparent: true,
           opacity: 1,
-          depthTest: false,
+          depthTest: true,
           side: THREE.DoubleSide
         });
 
@@ -194,7 +194,7 @@ export class EarthComponent implements AfterViewInit {
           color: 0xffffff,
           transparent: true,
           opacity: 1,
-          depthTest: true,
+          depthTest: false,
           side: THREE.DoubleSide
         });
 
