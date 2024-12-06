@@ -27,7 +27,7 @@ import { Ocean } from "../../../core/services/ocean.service"; // Import the Ocea
 export class EarthComponent implements AfterViewInit {
     @ViewChild('globeCanvas') private canvasRef!: ElementRef;
 
-  
+
 
     private camera!: THREE.PerspectiveCamera;
     private scene!: THREE.Scene;
@@ -179,7 +179,7 @@ export class EarthComponent implements AfterViewInit {
           depthTest: true,
           side: THREE.DoubleSide
         });
-    
+
         const borderGeometry = new THREE.RingGeometry(0.13, 0.16, 32);
         const borderMaterial = new THREE.MeshBasicMaterial({
           color: 0xffffff,
@@ -188,32 +188,32 @@ export class EarthComponent implements AfterViewInit {
           depthTest: true,
           side: THREE.DoubleSide
         });
-    
+
         const centerGeometry = new THREE.CircleGeometry(0.04, 32);
         const centerMaterial = new THREE.MeshBasicMaterial({
           color: 0xffffff,
           transparent: true,
           opacity: 1,
-          depthTest: true,
+          depthTest: false,
           side: THREE.DoubleSide
         });
-    
+
         oceans.forEach(ocean => {
           const point = new THREE.Group();
-    
+
           const mainPoint = new THREE.Mesh(mainGeometry, mainMaterial.clone());
           const border = new THREE.Mesh(borderGeometry, borderMaterial.clone());
           const centerPoint = new THREE.Mesh(centerGeometry, centerMaterial.clone());
-    
+
           point.add(mainPoint);
           point.add(border);
           point.add(centerPoint);
-    
+
           // Position
           const position = this.latLongToVector3(ocean.position.latitude, ocean.position.longitude);
           point.position.copy(position.normalize().multiplyScalar(this.EARTH_RADIUS + 0.3));
           point.userData = ocean;
-    
+
           this.oceanPoints.push(point);
           this.globe.add(point);
         });
@@ -221,6 +221,7 @@ export class EarthComponent implements AfterViewInit {
 
 
     private animate(): void {
+        const cloudMesh = this.scene.getObjectByName('cloudMesh');
         requestAnimationFrame(() => this.animate());
 
         // Faire face à la caméra pour chaque point
@@ -237,6 +238,10 @@ export class EarthComponent implements AfterViewInit {
         if (this.isAnimating) {
             this.updateCameraPosition();
         }
+        if (cloudMesh) {
+            cloudMesh.rotation.y += 0.0007; // Rotation différente des nuages
+        }
+
 
         this.controls.update();
         this.renderer.render(this.scene, this.camera);

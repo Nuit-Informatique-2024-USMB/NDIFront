@@ -1,0 +1,78 @@
+<body class="min-h-screen flex w-full">
+<!-- Ecran de victoire -->
+@if(counter > 50000){
+    <div class="image">
+        <img src="assets/clicker_img/Victory_screen.png">
+    </div>
+    <!-- Partie gauche -->
+} @else if (counter < 50000){
+    <div
+        class="w-4/5 flex items-center justify-center"
+        style="background-image: url('/assets/clicker_img/clicker_bg.png');"
+    >
+        <div class="image-container"
+             class="absolute transition-transform duration-300 ease-linear"
+             [ngStyle]="{ top: imagePosition.top, left: imagePosition.left }"
+        >
+            @if(counter < 10){
+            <div class="image" (click)="onImageClick()">
+                <img src="assets/clicker_img/raft_clicker_game_model_0.png">
+            </div>
+            } @else if (counter >= 10 && counter < 300){
+            <div class="image" (click)="onImageClick()">
+                <img src="assets/clicker_img/raft_clicker_game_model_1.png">
+            </div>
+            }@else if (counter >= 300 && counter < 1000 ){
+                <div class="image" (click)="onImageClick()">
+                    <img src="assets/clicker_img/raft_clicker_game_model_2.png">
+                </div>
+            }@else if (counter >= 1000 && counter < 5000 ){
+                <div class="image" (click)="onImageClick()">
+                    <img src="assets/clicker_img/raft_clicker_game_model_3.png">
+                </div>
+            }@else if (counter >= 5000 && counter < 25000){
+                <div class="image" (click)="onImageClick()">
+                    <img src="assets/clicker_img/raft_clicker_game_model_4.png">
+                </div>
+            }@else if (counter >= 25000 ){
+                <div class="image" (click)="onImageClick()">
+                    <img src="assets/clicker_img/raft_clicker_game_model_5.png">
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Partie droite -->
+    <div class="w-2/5  bg-[#D9D9D9]">
+        <div class="counter text-4xl font-bold flex justify-center items-center" >
+            Total : {{ counter | number:'1.1-1'}}
+            <br>
+            Income/s : {{ Totalincome | number:'1.1-1' }}
+        </div>
+        <div>
+            <img src="assets/clicker_img/bg_vertical_separator.png" class="image-counter">
+        </div>
+        <div>
+            @for(upgrade of UpgradeList;track upgrade.ID) {
+                @if(counter >= upgrade.seuilAffiche) {
+                    @if(upgrade.Income >0){
+                    <div class="upgrade flex justify-center " (click)="onUpgradeClick(upgrade.ID)">
+                        <img src="{{upgrade.ImgPath}}" class="m-1">
+                         <p class="m-1">Nom : {{upgrade.Name}}</p>
+                         <p class="m-1">Coût : {{upgrade.Cost}}</p>
+                         <p class="m-1"> Income : {{upgrade.Income}}</p>
+                    </div>
+                    } @else {
+                        <div class="upgrade flex justify-center " (click)="onUpgradeClick(upgrade.ID)">
+                        <img src="{{upgrade.ImgPath}}" class="m-1">
+                        <p class="m-1">Nom : {{upgrade.Name}}</p>
+                        <p class="m-1">Coût : {{upgrade.Cost}}</p>
+                        <p class="m-1"> Income : {{ Math.abs(upgrade.Income)}}</p>
+                        </div>
+                    }
+               }
+            }
+        </div>
+    </div>
+}
+</body>

@@ -5,6 +5,13 @@
         {{ hoveredOcean }}
     </div>
 
+    <div class="fixed top-4 left-4">
+        <a routerLink="/clicker" href="/clicker">
+            <img src="../../../../assets/catamaran-blue-png-11.png" class="w-32 h-32 cursor-pointer" alt="logo">
+        </a>
+
+    </div>
+
     <app-ocean-panel
         *ngIf="selectedOcean"
         [ocean]="selectedOcean"
