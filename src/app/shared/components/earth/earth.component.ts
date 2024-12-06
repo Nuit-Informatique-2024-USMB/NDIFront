@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import {OceanPanelComponent} from "../ocean-panel/ocean-panel.component";
 import {Ocean, OCEANS} from "../../../core/models/oceans.model";
+import { OceanService } from "../../../core/services/ocean.service";
 
 
 @Component({
