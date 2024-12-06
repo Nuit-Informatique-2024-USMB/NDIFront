@@ -221,6 +221,7 @@ export class EarthComponent implements AfterViewInit {
 
 
     private animate(): void {
+        const cloudMesh = this.scene.getObjectByName('cloudMesh');
         requestAnimationFrame(() => this.animate());
 
         // Faire face à la caméra pour chaque point
@@ -237,6 +238,10 @@ export class EarthComponent implements AfterViewInit {
         if (this.isAnimating) {
             this.updateCameraPosition();
         }
+        if (cloudMesh) {
+            cloudMesh.rotation.y += 0.0007; // Rotation différente des nuages
+        }
+
 
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
