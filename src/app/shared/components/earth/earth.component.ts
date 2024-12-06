@@ -73,7 +73,7 @@ export class EarthComponent implements AfterViewInit {
         });
     }
 
-    
+
     ngAfterViewInit() {
         this.initThreeJS();
         this.createGlobe();

@@ -2,6 +2,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
 
+
 <div class="ocean-panel w-full md:w-[90%] lg:w-[95%] bg-midnight-blue text-white"
      [ngClass]="{ 'active': ocean, 'closing': isClosing }"
      *ngIf="ocean"
@@ -51,25 +52,9 @@
     </div>
 
     <!-- QCM Section -->
-    <div *ngIf="ocean.QCM && ocean.QCM.length > 0" class="qcm-section mt-6">
-      <h3 class="text-xl font-bold text-purple-300 mb-3">
-        <i class="fas fa-question-circle text-purple-400 mr-2"></i> Questions à Choisir (QCM)
-      </h3>
-      <div *ngFor="let qcm of ocean.QCM" class="border border-white/40 rounded-lg p-4 mb-4 bg-white/10">
-        <h4 class="font-semibold text-blue-200 mb-2">
-          <i class="fas fa-list-ul text-blue-400 mr-2"></i>{{ qcm.title }}
-        </h4>
-        <div *ngFor="let question of qcm.questions; let i = index" class="question-item mt-2">
-          <div class="border-b border-white/20 pb-2 mb-2">
-            <p class="text-black-200">{{ question.question }}</p>
-            <ul class="list-disc pl-5">
-              <li *ngFor="let answer of question.answers; let j = index" [class.text-green-400]="j === question.correctAnswerIndex" class="text-black-300">
-                <i *ngIf="j === question.correctAnswerIndex" class="fas fa-check-circle mr-1"></i>{{ answer }}
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
+    <div *ngIf="ocean?.QCM?.length > 0" class="qcm-section mt-6">
+      <!-- Pass the first QCM to the QcmComponent -->
+      <app-qcm [qcm]="ocean.QCM[0]"></app-qcm>
     </div>
   </div>
 </div>
