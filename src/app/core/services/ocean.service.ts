@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
-// Les interfaces adaptées de ton modèle
+// Interfaces for your models
 export interface Ocean {
   _id: string;
   name: string;
@@ -42,18 +43,24 @@ export interface Anecdote {
   providedIn: 'root'
 })
 export class OceanService {
-
-  private apiUrl = 'https://ndi-rapi.mathis-mazoyer.fr/oceans'; // Remplace par l'URL de ton API
+  private apiUrl = 'https://ndi-rapi.mathis-mazoyer.fr/oceans'; // Replace with your API URL
 
   constructor(private http: HttpClient) { }
 
-  // Méthode pour récupérer tous les océans depuis l'API
   getOceans(): Observable<Ocean[]> {
-    return this.http.get<Ocean[]>(this.apiUrl);
+    return this.http.get<Ocean[]>(this.apiUrl).pipe(
+      catchError(this.handleError)
+    );
   }
 
-  // Méthode pour récupérer un océan spécifique par son nom
   getOceanByName(name: string): Observable<Ocean> {
-    return this.http.get<Ocean>(`${this.apiUrl}/${name}`);
+    return this.http.get<Ocean>(`${this.apiUrl}/${name}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  private handleError(error: any): Observable<never> {
+    console.error('An error occurred:', error); // Log the error to the console
+    return throwError(() => new Error('Something went wrong with the request. Please try again later.'));
   }
 }

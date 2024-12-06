@@ -1,11 +1,10 @@
-import { Component, ElementRef, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, AfterViewInit, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import {OceanPanelComponent} from "../ocean-panel/ocean-panel.component";
-import {Ocean, OCEANS} from "../../../core/models/oceans.model";
-import { OceanService } from "../../../core/services/ocean.service";
-
+import { OceanPanelComponent } from "../ocean-panel/ocean-panel.component";
+import { OceanService } from "../../../core/services/ocean.service"; // Assurez-vous d'importer le service
+import { Ocean } from "../../../core/services/ocean.service"; // Import the Ocean interface
 
 @Component({
     selector: 'app-globe',
@@ -27,6 +26,8 @@ import { OceanService } from "../../../core/services/ocean.service";
 })
 export class EarthComponent implements AfterViewInit {
     @ViewChild('globeCanvas') private canvasRef!: ElementRef;
+
+  
 
     private camera!: THREE.PerspectiveCamera;
     private scene!: THREE.Scene;
@@ -55,7 +56,7 @@ export class EarthComponent implements AfterViewInit {
     private readonly ZOOM_FACTOR = 0.7; // facteur de zoom (plus petit = plus zoomé)
     private animationStartTime = 0;
 
-    constructor() {
+    constructor(private oceanService: OceanService) {
         this.setupEventListeners();
     }
 
@@ -64,10 +65,19 @@ export class EarthComponent implements AfterViewInit {
         document.addEventListener('click', (event) => this.onClick(event));
     }
 
+    ngOnInit() {
+        // Appel de la méthode getOceans pour récupérer les océans
+        this.oceanService.getOceans().subscribe(oceans => {
+        // Créez des points pour chaque océan
+        this.createOceanPoints(oceans);
+        });
+    }
+
+    
     ngAfterViewInit() {
         this.initThreeJS();
         this.createGlobe();
-        this.createOceanPoints();
+        //this.createOceanPoints();
         this.animate();
     }
 
@@ -160,58 +170,54 @@ export class EarthComponent implements AfterViewInit {
     }
 
     // Modifiez la méthode createOceanPoints pour ajouter le cursor pointer
-    private createOceanPoints(): void {
+    private createOceanPoints(oceans: Ocean[]): void {
         const mainGeometry = new THREE.CircleGeometry(0.13, 16);
         const mainMaterial = new THREE.MeshBasicMaterial({
-            color: 0x000000,
-            transparent: true,
-            opacity: 1,
-            depthTest: true,
-            side: THREE.DoubleSide
+          color: 0x000000,
+          transparent: true,
+          opacity: 1,
+          depthTest: true,
+          side: THREE.DoubleSide
         });
-
+    
         const borderGeometry = new THREE.RingGeometry(0.13, 0.16, 32);
         const borderMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 1,
-            depthTest: true,
-            side: THREE.DoubleSide
+          color: 0xffffff,
+          transparent: true,
+          opacity: 1,
+          depthTest: true,
+          side: THREE.DoubleSide
         });
-
+    
         const centerGeometry = new THREE.CircleGeometry(0.04, 32);
         const centerMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 1,
-            depthTest: true,
-            side: THREE.DoubleSide
+          color: 0xffffff,
+          transparent: true,
+          opacity: 1,
+          depthTest: true,
+          side: THREE.DoubleSide
         });
-
-        OCEANS.forEach(ocean => {
-            const point = new THREE.Group();
-
-            const mainPoint = new THREE.Mesh(mainGeometry, mainMaterial.clone());
-            const border = new THREE.Mesh(borderGeometry, borderMaterial.clone());
-            const centerPoint = new THREE.Mesh(centerGeometry, centerMaterial.clone());
-
-            point.add(mainPoint);
-            point.add(border);
-            point.add(centerPoint);
-
-            // Position
-            const position = this.latLongToVector3(
-                ocean.position.latitude,
-                ocean.position.longitude
-            );
-
-            point.position.copy(position.normalize().multiplyScalar(this.EARTH_RADIUS + 0.3));
-            point.userData = ocean;
-
-            this.oceanPoints.push(point);
-            this.globe.add(point);
+    
+        oceans.forEach(ocean => {
+          const point = new THREE.Group();
+    
+          const mainPoint = new THREE.Mesh(mainGeometry, mainMaterial.clone());
+          const border = new THREE.Mesh(borderGeometry, borderMaterial.clone());
+          const centerPoint = new THREE.Mesh(centerGeometry, centerMaterial.clone());
+    
+          point.add(mainPoint);
+          point.add(border);
+          point.add(centerPoint);
+    
+          // Position
+          const position = this.latLongToVector3(ocean.position.latitude, ocean.position.longitude);
+          point.position.copy(position.normalize().multiplyScalar(this.EARTH_RADIUS + 0.3));
+          point.userData = ocean;
+    
+          this.oceanPoints.push(point);
+          this.globe.add(point);
         });
-    }
+      }
 
 
     private animate(): void {
