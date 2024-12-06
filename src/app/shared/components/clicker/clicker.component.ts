@@ -14,17 +14,17 @@ export class ClickerComponent implements OnInit, OnDestroy {
     protected counter: number = 0;
     imagePosition = { top: '50%', left: '50%' };
     protected UpgradeList: TypeUpgradeList[] = [
-        { ID: 1, Name: 'Pagaie', Cost: 25, Income: 0.1, ImgPath: 'assets/clicker_img/upgrade_pagaie.png', seuilAffiche: 0 },
-        { ID: 2, Name: 'Moteur', Cost: 100, Income: -1, ImgPath: 'assets/clicker_img/upgrade_motor.png', seuilAffiche: 150 },
-        { ID: 3, Name: 'Amélioration de la coque', Cost: 250, Income: 5, ImgPath: 'assets/clicker_img/upgrade_coque.png', seuilAffiche: 350 },
-        { ID: 4, Name: 'Amélioration des voiles', Cost: 500, Income: 10, ImgPath: 'assets/clicker_img/upgrade_voile.png', seuilAffiche: 1200 },
-        { ID: 5, Name: 'Filet de pêche', Cost: 1500, Income: -30, ImgPath: 'assets/clicker_img/upgrade_filet_peche.png', seuilAffiche: 3000 },
-        { ID: 6, Name: 'Récupérateur de plastique', Cost: 2000, Income: 50, ImgPath: 'assets/clicker_img/upgrade_recuperateur_plastique.png', seuilAffiche: 6000 }
+        { ID: 1, Name: 'Pagaie', Cost: 5, Income: 0.3, ImgPath: 'assets/clicker_img/upgrade_pagaie.png', seuilAffiche: 0 },
+        { ID: 2, Name: 'Moteur', Cost: 50, Income: -1, ImgPath: 'assets/clicker_img/upgrade_motor.png', seuilAffiche: 150 },
+        { ID: 3, Name: 'Amélioration de la coque', Cost: 125, Income: 5, ImgPath: 'assets/clicker_img/upgrade_coque.png', seuilAffiche: 350 },
+        { ID: 4, Name: 'Amélioration des voiles', Cost: 250, Income: 10, ImgPath: 'assets/clicker_img/upgrade_voile.png', seuilAffiche: 1200 },
+        { ID: 5, Name: 'Filet de pêche', Cost: 750, Income: -30, ImgPath: 'assets/clicker_img/upgrade_filet_peche.png', seuilAffiche: 3000 },
+        { ID: 6, Name: 'Récupérateur de plastique', Cost: 1000, Income: 50, ImgPath: 'assets/clicker_img/upgrade_recuperateur_plastique.png', seuilAffiche: 6000 }
     ];
     private incomeInterval!: ReturnType<typeof setInterval>;
 
     protected onImageClick(): void {
-        this.counter += 49000;
+        this.counter += 0.5;
         const randomTop = Math.random() * 90 + '%';
         const randomLeft = Math.random() * 90 + '%';
 
@@ -47,8 +47,8 @@ export class ClickerComponent implements OnInit, OnDestroy {
         this.shuffleUpgradeList(); // Mélange initial
         this.incomeInterval = setInterval(() => {
             this.shuffleUpgradeList(); // Mélange toutes les 5 secondes
-            const randomTop = Math.random() * 90 + '%';
-            const randomLeft = Math.random() * 90 + '%';
+            const randomTop = Math.random() * 60 + '%';
+            const randomLeft = Math.random() * 60 + '%';
 
             this.imagePosition = { top: randomTop, left: randomLeft };
             this.counter += this.Totalincome;
