@@ -11,7 +11,7 @@ import { QcmComponent } from "../qcm/qcm.component"; // Assurez-vous que ce comp
   styleUrls: ['./ocean-panel.component.scss']
 })
 export class OceanPanelComponent {
-  @Input() ocean: Ocean | null = null; // Données pour l'océan, passé depuis le parent
+  @Input() ocean!: Ocean; // Données pour l'océan, passé depuis le parent
   @Output() close = new EventEmitter<void>(); // EventEmitter pour fermer le panel
 
   isActive = false; // Etat du panel (ouvert/fermé)

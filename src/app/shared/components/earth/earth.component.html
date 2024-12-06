@@ -6,6 +6,7 @@
     </div>
 
     <app-ocean-panel
+        *ngIf="selectedOcean"
         [ocean]="selectedOcean"
         (close)="closePanel()">
     </app-ocean-panel>

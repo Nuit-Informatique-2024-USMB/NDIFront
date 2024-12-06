@@ -52,7 +52,7 @@
     </div>
 
     <!-- QCM Section -->
-    <div *ngIf="ocean?.QCM?.length > 0" class="qcm-section mt-6">
+    <div *ngIf="ocean.QCM.length > 0" class="qcm-section mt-6">
       <!-- Pass the first QCM to the QcmComponent -->
       <app-qcm [qcm]="ocean.QCM[0]"></app-qcm>
     </div>

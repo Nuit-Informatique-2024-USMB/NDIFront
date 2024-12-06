@@ -1,9 +1,16 @@
 import { Component, Input, OnInit } from '@angular/core';
+import {NgClass, NgForOf, NgIf} from "@angular/common";
 
 @Component({
-  selector: 'app-qcm',
-  templateUrl: './qcm.component.html',
-  styleUrls: ['./qcm.component.scss']
+    selector: 'app-qcm',
+    templateUrl: './qcm.component.html',
+    standalone: true,
+    imports: [
+        NgClass,
+        NgIf,
+        NgForOf
+    ],
+    styleUrls: ['./qcm.component.scss']
 })
 export class QcmComponent implements OnInit {
   @Input() qcm: any; // L'objet QCM passé en entrée
