@@ -6,17 +6,19 @@
   <div class="question-item mt-4">
     <div class="border-b border-white/20 pb-2 mb-4">
       <p class="text-white text-lg">{{ qcm.questions[currentQuestionIndex].question }}</p>
-      <ul class="list-disc pl-5 space-y-2">
-        <li *ngFor="let answer of qcm.questions[currentQuestionIndex].answers; let j = index"
-            [class.text-green-400]="isAnswered && j === currentAnswerIndex && isCorrect(j)"
-            [class.text-red-400]="isAnswered && j === currentAnswerIndex && !isCorrect(j)"
-            (click)="selectAnswer(j)"
-            class="cursor-pointer hover:bg-blue-700 transition duration-200 px-3 py-2 rounded-md">
+      
+      <!-- Remplacer les points par des divs avec des bordures -->
+      <div class="space-y-3 mt-3">
+        <div *ngFor="let answer of qcm.questions[currentQuestionIndex].answers; let j = index"
+             [class.border-green-500]="isAnswered && j === currentAnswerIndex && isCorrect(j)"
+             [class.border-red-500]="isAnswered && j === currentAnswerIndex && !isCorrect(j)"
+             (click)="selectAnswer(j)"
+             class="cursor-pointer border border-white/20 hover:bg-blue-700 transition duration-200 px-3 py-2 rounded-md">
           <i *ngIf="isAnswered && j === currentAnswerIndex"
              class="fas" [ngClass]="{'fa-check-circle': isCorrect(j), 'fa-times-circle': !isCorrect(j)}"></i>
           {{ answer }}
-        </li>
-      </ul>
+        </div>
+      </div>
       
       <!-- Afficher la bonne réponse si la réponse est incorrecte -->
       <div *ngIf="isAnswered">
