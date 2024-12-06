@@ -31,6 +31,12 @@
         </div>
         <!-- Partie Droite -->
         <div class="w-2/5 bg-[#D9D9D9] p-4">
+            <div class="fixed top-4 left-4">
+                <a routerLink="/earth" href="/earth">
+                    <img src="assets/arrow.png" class="w-16 h-16 cursor-pointer" alt="logo">
+                </a>
+            </div>
+
             <div class="counter text-4xl font-bold flex justify-center items-center">
                 Total: {{ counter | number:'1.1-1' }}
                 <br>
