@@ -8,5 +8,8 @@ export const routes: Routes = [
     },
     {
         path:"clicker", component: ClickerComponent
+    },
+    {
+        path: '', redirectTo: '/earth', pathMatch: 'full'
     }
 ];
