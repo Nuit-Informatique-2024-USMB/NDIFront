@@ -14,6 +14,14 @@ import {Router} from "@angular/router";
 export class TirComponent implements AfterViewInit {
 
     constructor(private router: Router) {
+        if (this.isMobile()) {
+            this.router.navigate(["/earth"]);
+            return;
+        }
+    }
+
+    private isMobile(): boolean {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
     async ngAfterViewInit() {
