@@ -160,7 +160,7 @@ export class EarthComponent implements AfterViewInit {
 
     // Modifiez la méthode createOceanPoints pour ajouter le cursor pointer
     private createOceanPoints(): void {
-        const mainGeometry = new THREE.CircleGeometry(0.13, 16);
+        const mainGeometry = new THREE.CircleGeometry(0.09, 16);
         const mainMaterial = new THREE.MeshBasicMaterial({
             color: 0x000000,
             transparent: true,
@@ -169,7 +169,7 @@ export class EarthComponent implements AfterViewInit {
             side: THREE.DoubleSide
         });
 
-        const borderGeometry = new THREE.RingGeometry(0.13, 0.16, 32);
+        const borderGeometry = new THREE.RingGeometry(0.11, 0.09, 32);
         const borderMaterial = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
@@ -183,8 +183,9 @@ export class EarthComponent implements AfterViewInit {
             color: 0xffffff,
             transparent: true,
             opacity: 1,
-            depthTest: true,
-            side: THREE.DoubleSide
+            depthTest: false,
+            side: THREE.DoubleSide,
+            blending: THREE.NormalBlending
         });
 
         OCEANS.forEach(ocean => {
