@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import {EarthComponent} from "./shared/components/earth/earth.component";
 import { ClickerComponent } from './shared/components/clicker/clicker.component';
+import {TirComponent} from "./tir/tir.component";
 
 export const routes: Routes = [
     {
@@ -10,6 +11,9 @@ export const routes: Routes = [
         path:"clicker", component: ClickerComponent
     },
     {
-        path: '', redirectTo: '/earth', pathMatch: 'full'
+        path: 'tir', component: TirComponent
+    },
+    {
+        path: '', redirectTo: '/tir', pathMatch: 'full'
     }
 ];
